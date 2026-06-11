@@ -3,62 +3,67 @@
 
 #define MAX_BRIGHTNESS 100
 #define MIN_BRIGHTNESS 0
-#define MAX_FREQUENCY 20000
+#define MAX_FREQUENCY 100
 #define MIN_FREQUENCY 1
 
-#define CHANGE_FREQUENCY_VALUE 100
+#define CHANGE_FREQUENCY_VALUE 10
 #define CHANGE_BRIGHTNESS_VALUE 10
 
 extern TIM_HandleTypeDef htim4;
 
+// Globalna zmienna przechowująca stan jasności w procentach (0-100)
+volatile static uint16_t current_brightness_pct = 50; 
+volatile static uint16_t current_frequency = 10; // Przykładowa początkowa częstotliwość w Hz
 
-void LED_blinking_speed_changer(uint16_t new_frequency){
-    if(new_frequency > MAX_FREQUENCY){
-        new_frequency = MAX_FREQUENCY;
-    }
-    else if(new_frequency < MIN_FREQUENCY){
-        new_frequency = MIN_FREQUENCY;
-    }
-    //we change the period of the timer to change the blinking speed of the LEDs
-    htim4.Init.Period = new_frequency;
-    if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
-    {
-        Error_Handler();
-    }
+static void LED_Hardware_Update(void) {
+    // 1. Przeliczenie i ustawienie nowej częstotliwości (ARR)
+    uint16_t new_arr_value = (SystemCoreClock * 2) / (current_frequency * (htim4.Init.Prescaler + 1)) - 1;
+    __HAL_TIM_SET_AUTORELOAD(&htim4, new_arr_value);
+    htim4.Init.Period = new_arr_value; // Aktualizacja struktury do obliczeń poniżej
+
+    // 2. Przeliczenie i ustawienie impulsu (CCR) z zachowaniem stałego procentu jasności
+    uint16_t new_pulse = (current_brightness_pct * new_arr_value) / 100;
+    
+    __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, new_pulse);
+    __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_2, new_pulse);
+    __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, new_pulse);
+    __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, new_pulse);
 }
 
-void LED_blinking_speed_changer_by_const_value(){
-    uint16_t new_frequency = htim4.Init.Period + CHANGE_FREQUENCY_VALUE;
-    LED_blinking_speed_changer(new_frequency);
+// --- OBSŁUGA CZĘSTOTLIWOŚCI ---
+
+void LED_blinking_speed_increment_by_const_value(){
+    current_frequency += CHANGE_FREQUENCY_VALUE;
+    if(current_frequency > MAX_FREQUENCY) {
+        current_frequency = MAX_FREQUENCY;
+    }
+    LED_Hardware_Update(); // Aktualizujemy sprzęt
 }
 
 void LED_blinking_speed_decrement_by_const_value(){
-    uint16_t new_frequency = htim4.Init.Period - CHANGE_FREQUENCY_VALUE;
-    LED_blinking_speed_changer(new_frequency);
+    if (current_frequency >= (MIN_FREQUENCY + CHANGE_FREQUENCY_VALUE)) {
+        current_frequency -= CHANGE_FREQUENCY_VALUE;
+    } else {
+        current_frequency = MIN_FREQUENCY;
+    }
+    LED_Hardware_Update(); // Aktualizujemy sprzęt
 }
 
-//new brigthness is a value from 0 to 100
-void LED_brightness_changer(uint16_t new_brightness){
-    if(new_brightness > MAX_BRIGHTNESS){
-        new_brightness = MAX_BRIGHTNESS;
-    }
-    else if(new_brightness < MIN_BRIGHTNESS){
-        new_brightness = MIN_BRIGHTNESS;
-    }
-    //we change the pulse of the timer to change the brightness of the LEDs
-    uint16_t new_pulse = (new_brightness / 100) * htim4.Init.Period;
-    __HAL_TIM_SetCompare(&htim4,TIM_CHANNEL_1,new_pulse);
-    __HAL_TIM_SetCompare(&htim4,TIM_CHANNEL_2,new_pulse);
-    __HAL_TIM_SetCompare(&htim4,TIM_CHANNEL_3,new_pulse);
-    __HAL_TIM_SetCompare(&htim4,TIM_CHANNEL_4,new_pulse);
-}
+// --- OBSŁUGA JASNOŚCI ---
 
 void LED_brightness_increment_by_const_value(){
-    uint16_t new_brightness = ((htim4.Init.Period / 100) * htim4.Init.Period) + CHANGE_BRIGHTNESS_VALUE;
-    LED_brightness_changer(new_brightness);
+    current_brightness_pct += CHANGE_BRIGHTNESS_VALUE;
+    if(current_brightness_pct > MAX_BRIGHTNESS) {
+        current_brightness_pct = MAX_BRIGHTNESS;
+    }
+    LED_Hardware_Update(); // Aktualizujemy sprzęt
 }
 
 void LED_brightness_decrement_by_const_value(){
-    uint16_t new_brightness = ((htim4.Init.Period / 100) * htim4.Init.Period) - CHANGE_BRIGHTNESS_VALUE;
-    LED_brightness_changer(new_brightness);
+    if (current_brightness_pct >= CHANGE_BRIGHTNESS_VALUE) {
+        current_brightness_pct -= CHANGE_BRIGHTNESS_VALUE;
+    } else {
+        current_brightness_pct = MIN_BRIGHTNESS;
+    }
+    LED_Hardware_Update(); // Aktualizujemy sprzęt
 }

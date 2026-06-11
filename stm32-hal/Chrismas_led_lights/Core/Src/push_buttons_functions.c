@@ -1,4 +1,3 @@
-//#include "stm32f4xx_hal_gpio.h"
 #include "push_buttons_functions.h"
 
 extern TIM_HandleTypeDef htim3;
@@ -49,23 +48,4 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
     //Then we activate timer 
     HAL_TIM_Base_Start_IT(&htim3);
     
-}
-
-void Button_function_selector(struct Button_pressed button){
-    if(button.GPIO_Pin == Button_up_Pin){
-        // Handle Button Up action
-    }
-    else if(button.GPIO_Pin == Button_down_Pin){
-        // Handle Button Down action
-    }
-    else if(button.GPIO_Pin == Button_left_Pin){
-        // Handle Button Left action
-    }
-    else if(button.GPIO_Pin == Button_rigth_Pin){
-        // Handle Button Right action
-    }
-    else if(button.GPIO_Pin == Button_middle_Pin){
-        // Handle Button Middle action
-    }
-
 }

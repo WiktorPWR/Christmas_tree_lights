@@ -90,13 +90,14 @@ int main(void)
 
   /* USER CODE BEGIN Init */
 
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -109,6 +110,7 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -456,13 +458,13 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : Button_left_Pin Button_rigth_Pin Button_middle_Pin Button_down_Pin */
   GPIO_InitStruct.Pin = Button_left_Pin|Button_rigth_Pin|Button_middle_Pin|Button_down_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : Button_up_Pin */
   GPIO_InitStruct.Pin = Button_up_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(Button_up_GPIO_Port, &GPIO_InitStruct);
 
