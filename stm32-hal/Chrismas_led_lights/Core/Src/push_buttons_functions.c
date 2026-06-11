@@ -17,7 +17,7 @@ void Interrupts_GPIO_enable(){
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
-    actual_button_pressed = (struct Button_pressed){.GPIO_Port = NULL, .GPIO_Pin = 0};
+    actual_button_pressed = (struct Button_pressed){.GPIO_Port = NULL, .GPIO_Pin = 0, .pressed_confirmation = 0};
 
     switch (GPIO_Pin) {
         case Button_up_Pin:
@@ -49,4 +49,23 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
     //Then we activate timer 
     HAL_TIM_Base_Start_IT(&htim3);
     
+}
+
+void Button_function_selector(struct Button_pressed button){
+    if(button.GPIO_Pin == Button_up_Pin){
+        // Handle Button Up action
+    }
+    else if(button.GPIO_Pin == Button_down_Pin){
+        // Handle Button Down action
+    }
+    else if(button.GPIO_Pin == Button_left_Pin){
+        // Handle Button Left action
+    }
+    else if(button.GPIO_Pin == Button_rigth_Pin){
+        // Handle Button Right action
+    }
+    else if(button.GPIO_Pin == Button_middle_Pin){
+        // Handle Button Middle action
+    }
+
 }
