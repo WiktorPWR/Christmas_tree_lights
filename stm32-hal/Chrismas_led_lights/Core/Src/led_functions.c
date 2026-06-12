@@ -24,7 +24,7 @@
 #define MIN_FREQUENCY 1
 
 /** @brief Step size for frequency adjustments (Hz). */
-#define CHANGE_FREQUENCY_VALUE 10
+#define CHANGE_FREQUENCY_VALUE 1
 
 /** @brief Step size for brightness adjustments (%). */
 #define CHANGE_BRIGHTNESS_VALUE 10
@@ -66,8 +66,13 @@ static void LED_Hardware_Update(void) {
     htim4.Init.Period = new_arr_value; // Update the structure for the calculation below
 
     /* 2. Recalculate and set the pulse width (CCR) keeping a constant brightness percentage */
-    uint16_t new_pulse = (current_brightness_pct * new_arr_value) / 100;
-    
+    uint16_t new_pulse=0;
+    if(current_brightness_pct == MAX_BRIGHTNESS) {
+        new_pulse = htim4.Init.Period-1;
+    } else {
+        new_pulse = (current_brightness_pct * (htim4.Init.Period + 1)) / 100;
+    }
+
     __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, new_pulse);
     __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_2, new_pulse);
     __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, new_pulse);
