@@ -11,13 +11,16 @@
 
 extern TIM_HandleTypeDef htim4;
 
+#define START_BRIGHTNESS_PCT 50
+#define START_FREQUENCY 1
+
 // Globalna zmienna przechowująca stan jasności w procentach (0-100)
-volatile static uint16_t current_brightness_pct = 50; 
-volatile static uint16_t current_frequency = 10; // Przykładowa początkowa częstotliwość w Hz
+volatile static uint16_t current_brightness_pct; 
+volatile static uint16_t current_frequency; // Przykładowa początkowa częstotliwość w Hz
 
 static void LED_Hardware_Update(void) {
     // 1. Przeliczenie i ustawienie nowej częstotliwości (ARR)
-    uint16_t new_arr_value = (SystemCoreClock * 2) / (current_frequency * (htim4.Init.Prescaler + 1)) - 1;
+    uint16_t new_arr_value = ((SystemCoreClock * 4) / (current_frequency * (htim4.Init.Prescaler + 1))) - 1;
     __HAL_TIM_SET_AUTORELOAD(&htim4, new_arr_value);
     htim4.Init.Period = new_arr_value; // Aktualizacja struktury do obliczeń poniżej
 
@@ -31,6 +34,12 @@ static void LED_Hardware_Update(void) {
 }
 
 // --- OBSŁUGA CZĘSTOTLIWOŚCI ---
+
+void LED_set_init_state() {
+    current_brightness_pct = START_BRIGHTNESS_PCT; // Ustawienie początkowej jasności na 50%
+    current_frequency = START_FREQUENCY; // Ustawienie początkowej częstotliwości na 10 Hz
+    LED_Hardware_Update(); // Aktualizacja sprzętu z nowymi wartościami
+}
 
 void LED_blinking_speed_increment_by_const_value(){
     current_frequency += CHANGE_FREQUENCY_VALUE;

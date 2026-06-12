@@ -30,7 +30,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
             else if(actual_button_pressed.GPIO_Pin == Button_middle_Pin){
                 //This will on and off the LEDs
                 if(LED_on_off_flag == 0){
-                    LED_brightness_increment_by_const_value();
+                    LED_set_init_state();
                     HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
                     HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
                     HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
