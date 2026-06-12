@@ -64,5 +64,5 @@ You can customize operational boundaries and stepping bounds directly within `le
 #define MIN_BRIGHTNESS               0  // Minimum brightness %
 #define MAX_FREQUENCY              100  // Maximum blinking speed (Hz)
 #define MIN_FREQUENCY                1  // Minimum blinking speed (Hz)
-#define CHANGE_FREQUENCY_VALUE      10  // Hz adjustment step size
+#define CHANGE_FREQUENCY_VALUE       1  // Hz adjustment step size
 #define CHANGE_BRIGHTNESS_VALUE     10  // Brightness % adjustment step size
