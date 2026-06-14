@@ -35,6 +35,7 @@
 /** @brief Default blinking frequency in Hz on initialization. */
 #define START_FREQUENCY 1
 
+#define TIMER_INPUT_CLOCK_HZ 84000000
 
 /* --- EXTERNAL PERIPHERALS --- */
 
@@ -45,10 +46,22 @@ extern TIM_HandleTypeDef htim4;
 /* --- STATE VARIABLES --- */
 
 /** @brief Current brightness duty cycle, represented as a percentage (0-100%). */
-volatile static uint16_t current_brightness_pct; 
+union LED_Brightness{
+    uint8_t leds_brightness[4];
+    uint32_t led_brightness_all;
+
+};
+
+volatile static union LED_Brightness brightness = {0};
+
+// volatile static uint16_t current_brightness_led_1;
+// volatile static uint16_t current_brightness_led_2;
+// volatile static uint16_t current_brightness_led_3;
+// volatile static uint16_t current_brightness_led_4; 
 
 /** @brief Current blinking frequency in Hertz (Hz). */
 volatile static uint16_t current_frequency; 
+
 
 
 /* --- PRIVATE FUNCTIONS --- */
@@ -61,22 +74,39 @@ volatile static uint16_t current_frequency;
  */
 static void LED_Hardware_Update(void) {
     /* 1. Recalculate and set the new frequency (ARR) */
-    uint16_t new_arr_value = ((SystemCoreClock * 4) / (current_frequency * (htim4.Init.Prescaler + 1))) - 1;
+    uint16_t new_arr_value = ( TIMER_INPUT_CLOCK_HZ / (current_frequency * (htim4.Init.Prescaler + 1))) - 1;
     __HAL_TIM_SET_AUTORELOAD(&htim4, new_arr_value);
-    htim4.Init.Period = new_arr_value; // Update the structure for the calculation below
 
     /* 2. Recalculate and set the pulse width (CCR) keeping a constant brightness percentage */
     uint16_t new_pulse=0;
-    if(current_brightness_pct == MAX_BRIGHTNESS) {
-        new_pulse = htim4.Init.Period-1;
-    } else {
-        new_pulse = (current_brightness_pct * (htim4.Init.Period + 1)) / 100;
+    
+    for(uint8_t i=0; i<4; i++){
+        if(brightness.leds_brightness[i] == MAX_BRIGHTNESS){
+            new_pulse = new_arr_value;
+        }
+        else if(brightness.leds_brightness[i] == MIN_BRIGHTNESS){
+            new_pulse = 0;
+        }
+        else {
+            new_pulse = ((uint32_t)brightness.leds_brightness[i] * (new_arr_value + 1)) / 100;
+        }
+
+        switch(i){
+            case 0:
+                __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, new_pulse);
+                break;
+            case 1:
+                __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_2, new_pulse);
+                break;
+            case 2:
+                __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, new_pulse);
+                break;
+            case 3:
+                __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, new_pulse);
+                break;
+        }
     }
 
-    __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, new_pulse);
-    __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_2, new_pulse);
-    __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, new_pulse);
-    __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, new_pulse);
 
     htim4.Instance->EGR = TIM_EGR_UG; // Generate an update event to apply changes immediately
 }
@@ -84,70 +114,105 @@ static void LED_Hardware_Update(void) {
 
 /* --- PUBLIC FUNCTIONS (FREQUENCY CONTROL) --- */
 
-/**
- * @brief  Initializes the internal LED state variables and applies them to the hardware.
- * @details Sets the initial brightness to 50% and frequency to 1 Hz.
- * @retval None
- */
-void LED_set_init_state(void) {
-    current_brightness_pct = START_BRIGHTNESS_PCT; 
-    current_frequency = START_FREQUENCY; 
-    LED_Hardware_Update(); 
-}
 
-/**
- * @brief  Increments the blinking frequency by a predefined constant value.
- * @details Clamps the value to MAX_FREQUENCY if the threshold is exceeded.
- * @retval None
- */
-void LED_blinking_speed_increment_by_const_value(void) {
-    current_frequency += CHANGE_FREQUENCY_VALUE;
-    if(current_frequency > MAX_FREQUENCY) {
-        current_frequency = MAX_FREQUENCY;
+void LED_increase_frequency(void) {
+    if (current_frequency + CHANGE_FREQUENCY_VALUE <= MAX_FREQUENCY) {
+        current_frequency += CHANGE_FREQUENCY_VALUE;
+        LED_Hardware_Update();
     }
-    LED_Hardware_Update(); 
 }
 
-/**
- * @brief  Decrements the blinking frequency by a predefined constant value.
- * @details Prevents underflow by safely clamping the value to MIN_FREQUENCY.
- * @retval None
- */
-void LED_blinking_speed_decrement_by_const_value(void) {
-    if (current_frequency >= (MIN_FREQUENCY + CHANGE_FREQUENCY_VALUE)) {
+void LED_decrease_frequency(void) {
+    if (current_frequency - CHANGE_FREQUENCY_VALUE >= MIN_FREQUENCY) {
         current_frequency -= CHANGE_FREQUENCY_VALUE;
-    } else {
-        current_frequency = MIN_FREQUENCY;
+        LED_Hardware_Update();
     }
-    LED_Hardware_Update(); 
 }
 
+void LED_set_frequency(uint16_t frequency) {
+    if (frequency >= MIN_FREQUENCY && frequency <= MAX_FREQUENCY) {
+        current_frequency = frequency;
+        LED_Hardware_Update();
+    }
+}
 
 /* --- PUBLIC FUNCTIONS (BRIGHTNESS CONTROL) --- */
 
-/**
- * @brief  Increments the LED brightness duty cycle by a predefined constant value.
- * @details Clamps the value to MAX_BRIGHTNESS if the threshold is exceeded.
- * @retval None
- */
-void LED_brightness_increment_by_const_value(void) {
-    current_brightness_pct += CHANGE_BRIGHTNESS_VALUE;
-    if(current_brightness_pct > MAX_BRIGHTNESS) {
-        current_brightness_pct = MAX_BRIGHTNESS;
+void LED_increase_brightness(uint8_t led_index) {
+    if (led_index < 4 && brightness.leds_brightness[led_index] + CHANGE_BRIGHTNESS_VALUE <= MAX_BRIGHTNESS) {
+        brightness.leds_brightness[led_index] += CHANGE_BRIGHTNESS_VALUE;
+        LED_Hardware_Update();
+    }else if (led_index < 4 && brightness.leds_brightness[led_index] + CHANGE_BRIGHTNESS_VALUE > MAX_BRIGHTNESS) {
+        brightness.leds_brightness[led_index] = MAX_BRIGHTNESS;
+        LED_Hardware_Update();
     }
-    LED_Hardware_Update(); 
 }
 
-/**
- * @brief  Decrements the LED brightness duty cycle by a predefined constant value.
- * @details Prevents underflow by safely clamping the value to MIN_BRIGHTNESS.
- * @retval None
- */
-void LED_brightness_decrement_by_const_value(void) {
-    if (current_brightness_pct >= CHANGE_BRIGHTNESS_VALUE) {
-        current_brightness_pct -= CHANGE_BRIGHTNESS_VALUE;
-    } else {
-        current_brightness_pct = MIN_BRIGHTNESS;
+void LED_decrease_brightness(uint8_t led_index) {
+    if (led_index < 4 && brightness.leds_brightness[led_index] >= CHANGE_BRIGHTNESS_VALUE) {
+        brightness.leds_brightness[led_index] -= CHANGE_BRIGHTNESS_VALUE;
+        LED_Hardware_Update();
+    }else if (led_index < 4 && brightness.leds_brightness[led_index] < CHANGE_BRIGHTNESS_VALUE) {
+        brightness.leds_brightness[led_index] = MIN_BRIGHTNESS;
+        LED_Hardware_Update();
     }
-    LED_Hardware_Update(); 
 }
+
+void LED_set_brightness(uint8_t led_index, uint8_t brightness_value) {
+    if (led_index < 4 && brightness_value >= MIN_BRIGHTNESS && brightness_value <= MAX_BRIGHTNESS) {
+        brightness.leds_brightness[led_index] = brightness_value;
+        LED_Hardware_Update();
+    }
+}
+
+void LED_set_all_brightness(uint8_t brightness_value) {
+    if (brightness_value >= MIN_BRIGHTNESS && brightness_value <= MAX_BRIGHTNESS) {
+        for (uint8_t i = 0; i < 4; i++) {
+            brightness.leds_brightness[i] = brightness_value;
+        }
+        LED_Hardware_Update();
+    }
+}
+
+void LED_increase_all_brightness(void) {
+    for (uint8_t i = 0; i < 4; i++) {
+        if (brightness.leds_brightness[i] + CHANGE_BRIGHTNESS_VALUE <= MAX_BRIGHTNESS) {
+            brightness.leds_brightness[i] += CHANGE_BRIGHTNESS_VALUE;
+        } else {
+            brightness.leds_brightness[i] = MAX_BRIGHTNESS;
+        }
+    }
+    LED_Hardware_Update();
+}
+
+
+void LED_decrease_all_brightness(void) {
+    for (uint8_t i = 0; i < 4; i++) {
+        if (brightness.leds_brightness[i] >= CHANGE_BRIGHTNESS_VALUE) {
+            brightness.leds_brightness[i] -= CHANGE_BRIGHTNESS_VALUE;
+        } else {
+            brightness.leds_brightness[i] = MIN_BRIGHTNESS;
+        }
+    }
+    LED_Hardware_Update();
+}
+
+void LED_power_ON(void){
+    current_frequency = START_FREQUENCY; 
+    brightness.led_brightness_all = 0xFFFFFFFF; // Set all LEDs to maximum brightness
+    LED_Hardware_Update();
+    HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
+    HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+    HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
+}
+
+void LED_power_OFF(void){ 
+    brightness.led_brightness_all = 0x00000000; // Set all LEDs to minimum brightness
+    LED_Hardware_Update();
+    HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_2);
+    HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
+    HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_4);
+}
+

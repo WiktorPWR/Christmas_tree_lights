@@ -54,38 +54,31 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
             /* UP Button: Increase LED blinking speed */
             if(actual_button_pressed.GPIO_Pin == Button_up_Pin) {
-                LED_blinking_speed_increment_by_const_value();
+                LED_increase_frequency();
             }
             /* DOWN Button: Decrease LED blinking speed */
             else if(actual_button_pressed.GPIO_Pin == Button_down_Pin) {
-                LED_blinking_speed_decrement_by_const_value();
+                LED_decrease_frequency();
             }
             /* LEFT Button: Increase LED brightness */
             else if(actual_button_pressed.GPIO_Pin == Button_left_Pin) {
-                LED_brightness_increment_by_const_value();
+                LED_increase_all_brightness();
             }
             /* RIGHT Button: Decrease LED brightness */
             else if(actual_button_pressed.GPIO_Pin == Button_rigth_Pin) { // Note: original typo in macro retained
-                LED_brightness_decrement_by_const_value();
+                LED_decrease_all_brightness();
             }
             /* MIDDLE Button: Toggle LED state (ON/OFF) */
             else if(actual_button_pressed.GPIO_Pin == Button_middle_Pin) {
                 
                 /* If LEDs are currently OFF, turn them ON with default parameters */
                 if(LED_on_off_flag == 0) {
-                    LED_set_init_state();
-                    HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
-                    HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
-                    HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
-                    HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
+                    LED_power_ON();
                     LED_on_off_flag = 1;
                 }
                 /* If LEDs are currently ON, turn them OFF by stopping the PWM */
                 else {
-                    HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);
-                    HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_2);
-                    HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
-                    HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_4);
+                    LED_power_OFF();
                     LED_on_off_flag = 0;
                 }
             }

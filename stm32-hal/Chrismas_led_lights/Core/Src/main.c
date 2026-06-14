@@ -294,9 +294,9 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 83;
+  htim3.Init.Prescaler = 41;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 49999;
+  htim3.Init.Period = 59999;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -340,7 +340,7 @@ static void MX_TIM4_Init(void)
 
   /* USER CODE END TIM4_Init 1 */
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 50000;
+  htim4.Init.Prescaler = 8399;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim4.Init.Period = 4199;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -456,17 +456,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
   HAL_GPIO_Init(CLK_IN_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Button_left_Pin Button_rigth_Pin Button_middle_Pin Button_down_Pin */
-  GPIO_InitStruct.Pin = Button_left_Pin|Button_rigth_Pin|Button_middle_Pin|Button_down_Pin;
+  /*Configure GPIO pins : Button_rigth_Pin Button_left_Pin Button_down_Pin Button_up_Pin */
+  GPIO_InitStruct.Pin = Button_rigth_Pin|Button_left_Pin|Button_down_Pin|Button_up_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : Button_up_Pin */
-  GPIO_InitStruct.Pin = Button_up_Pin;
+  /*Configure GPIO pin : Button_middle_Pin */
+  GPIO_InitStruct.Pin = Button_middle_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(Button_up_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(Button_middle_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : Audio_RST_Pin */
   GPIO_InitStruct.Pin = Audio_RST_Pin;

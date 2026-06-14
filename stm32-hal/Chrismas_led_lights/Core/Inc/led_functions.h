@@ -11,44 +11,27 @@
 
 #include "main.h"
 
-/**
- * @brief  Initializes the LED control state variables and applies them to the hardware.
- * @note   Sets the initial brightness to 50% and frequency to 1 Hz, then updates
- * the timer configuration immediately.
- * @retval None
- */
-void LED_set_init_state(void);
+void LED_power_ON(void);
 
-/**
- * @brief  Increments the LED blinking frequency by a predefined constant value.
- * @details Automatically clamps the frequency to the maximum allowed limit (100 Hz).
- * The hardware update is forced immediately without waiting for the current cycle to finish.
- * @retval None
- */
-void LED_blinking_speed_increment_by_const_value(void);
+void LED_power_OFF(void);
 
-/**
- * @brief  Decrements the LED blinking frequency by a predefined constant value.
- * @details Automatically clamps the frequency to the minimum allowed limit (1 Hz).
- * The hardware update is forced immediately without waiting for the current cycle to finish.
- * @retval None
- */
-void LED_blinking_speed_decrement_by_const_value(void);
+void LED_set_brightness(uint8_t led_index, uint8_t brightness_value);
 
-/**
- * @brief  Increments the LED brightness duty cycle by a predefined constant value.
- * @details Automatically clamps the brightness percentage to the maximum allowed limit (100%).
- * The hardware update is forced immediately without waiting for the current cycle to finish.
- * @retval None
- */
-void LED_brightness_increment_by_const_value(void);
+void LED_set_all_brightness(uint8_t brightness_value);
 
-/**
- * @brief  Decrements the LED brightness duty cycle by a predefined constant value.
- * @details Automatically clamps the brightness percentage to the minimum allowed limit (0%).
- * The hardware update is forced immediately without waiting for the current cycle to finish.
- * @retval None
- */
-void LED_brightness_decrement_by_const_value(void);
+void LED_decrease_brightness(uint8_t led_index);
+
+void LED_increase_brightness(uint8_t led_index);
+
+void LED_set_frequency(uint16_t frequency);
+
+void LED_decrease_all_brightness(void);
+
+void LED_increase_all_brightness(void);
+
+void LED_decrease_frequency(void);
+
+void LED_increase_frequency(void);
+
 
 #endif /* LED_FUNCTIONS_H */
