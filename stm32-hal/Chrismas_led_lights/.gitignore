@@ -1,0 +1,42 @@
+# ==========================================
+# Pliki generowane przez kompilację (CMake / Make)
+# ==========================================
+build/
+Build/
+out/
+cmake-build-*/
+
+# Executables and libraries (w razie gdyby wyleciały poza build)
+*.elf
+*.bin
+*.hex
+*.map
+*.o
+*.obj
+*.d
+
+# ==========================================
+# Konfiguracja lokalna narzędzi (IDE / Edytory)
+# ==========================================
+# VS Code
+.vscode/
+# Wyjątek: jeśli chcesz dzielić się konfiguracją debuggera z zespołem, 
+# możesz odkomentować poniższą linijkę, ale zazwyczaj lepiej trzymać to lokalnie:
+# !.vscode/launch.json
+
+# CLion / JetBrains
+.idea/
+
+# Pliki tymczasowe STM32CubeMX / STM32CubeIDE (jeśli używasz hybrydowo)
+.mxproject
+*.launch
+/RemoteSystemsTempFiles/
+.settings/
+
+# ==========================================
+# Systemowe i śmieci lokalne
+# ==========================================
+.DS_Store
+Thumbs.db
+*.bak
+*.log
